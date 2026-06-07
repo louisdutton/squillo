@@ -1,0 +1,16 @@
+{
+  "name": "squillo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "build": "bun run scripts/build.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.16",
+    "typescript": "^5.8.3"
+  }
+}
+

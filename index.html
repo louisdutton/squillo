@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Squillo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="topbar">
+        <div>
+          <h1>Squillo</h1>
+          <p>Realtime vocal harmonic and singer's formant analysis.</p>
+        </div>
+        <button id="startButton" type="button">Start Mic</button>
+      </section>
+
+      <section class="meters" aria-label="analysis meters">
+        <article>
+          <span>Pitch</span>
+          <strong id="pitchValue">--</strong>
+        </article>
+        <article>
+          <span>Nearest Note</span>
+          <strong id="noteValue">--</strong>
+        </article>
+        <article>
+          <span>Squillo Band</span>
+          <strong id="squilloValue">--</strong>
+        </article>
+        <article>
+          <span>Brightness</span>
+          <strong id="brightnessValue">--</strong>
+        </article>
+      </section>
+
+      <section class="stage">
+        <canvas id="spectrumCanvas" width="1200" height="420" aria-label="frequency spectrum"></canvas>
+        <canvas id="spectrogramCanvas" width="1200" height="360" aria-label="spectrogram"></canvas>
+      </section>
+
+      <section class="controls">
+        <label>
+          Input gain
+          <input id="gainControl" type="range" min="0.2" max="4" step="0.1" value="1" />
+        </label>
+        <label>
+          Target singer's formant
+          <select id="bandControl">
+            <option value="2400,3200">Low voices: 2.4-3.2 kHz</option>
+            <option value="2600,3600" selected>General: 2.6-3.6 kHz</option>
+            <option value="2800,4000">High voices: 2.8-4.0 kHz</option>
+          </select>
+        </label>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
+
