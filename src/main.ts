@@ -377,10 +377,11 @@ function dbToY(db: number, height: number): number {
 }
 
 function heatColor(value: number, inBand: boolean): string {
-  const r = Math.round(24 + value * 231);
-  const g = Math.round(34 + value * (inBand ? 202 : 118));
-  const b = Math.round(42 + value * (inBand ? 72 : 34));
-  return `rgb(${r}, ${g}, ${b})`;
+  const r = Math.round(245 * value);
+  const g = Math.round(value * (inBand ? 205 : 145));
+  const b = Math.round(value * (inBand ? 70 : 35));
+  const alpha = clamp(value * 1.15, 0, 1);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function smooth(previous: number, next: number, factor: number): number {
