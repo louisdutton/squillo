@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run src/server.ts",
-    "build": "bun run scripts/build.ts",
+    "dev": "bun --hot index.html",
+    "build": "rm -rf dist && bun build index.html --outdir=dist",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -13,4 +13,3 @@
     "typescript": "^5.8.3"
   }
 }
-
