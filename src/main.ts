@@ -7,15 +7,18 @@ type Analysis = {
   pitch: number | null;
   note: string;
   squilloRatio: number;
-  brightness: number;
+  squilloLevel: SquilloLevel;
   bandPeak: number;
 };
+
+type SquilloLevel = "low" | "building" | "strong";
 
 const startButton = requireElement<HTMLButtonElement>("#startButton");
 const pitchValue = requireElement<HTMLElement>("#pitchValue");
 const noteValue = requireElement<HTMLElement>("#noteValue");
 const squilloValue = requireElement<HTMLElement>("#squilloValue");
-const brightnessValue = requireElement<HTMLElement>("#brightnessValue");
+const squilloStatus = requireElement<HTMLElement>("#squilloStatus");
+const squilloMeter = requireElement<HTMLElement>("#squilloMeter");
 const gainControl = requireElement<HTMLInputElement>("#gainControl");
 const spectrumCanvas = requireElement<HTMLCanvasElement>("#spectrumCanvas");
 const spectrogramCanvas = requireElement<HTMLCanvasElement>("#spectrogramCanvas");
@@ -28,6 +31,8 @@ const maxPitchHz = 1100;
 const minPitchRms = 0.0025;
 const minPitchConfidence = 0.38;
 const projectionBand: Band = { low: 2400, high: 3800 };
+const buildingSquilloRatio = 0.08;
+const strongSquilloRatio = 0.18;
 const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 let audioContext: AudioContext | null = null;
@@ -38,7 +43,6 @@ let frequencyData = new Float32Array(0);
 let timeData = new Float32Array(0);
 let animationHandle = 0;
 let smoothedSquillo = 0;
-let smoothedBrightness = 0;
 
 drawIdle();
 
@@ -99,7 +103,10 @@ function stopAudio(): void {
   pitchValue.textContent = "--";
   noteValue.textContent = "--";
   squilloValue.textContent = "--";
-  brightnessValue.textContent = "--";
+  squilloStatus.textContent = "Waiting";
+  squilloStatus.dataset.state = "idle";
+  squilloMeter.style.transform = "scaleX(0)";
+  squilloMeter.dataset.state = "idle";
   drawIdle();
 }
 
@@ -124,18 +131,15 @@ function analyseVoice(sampleRate: number, band: Band): Analysis {
   const note = pitch ? frequencyToNote(pitch) : "--";
   const squillo = bandEnergy(sampleRate, band.low, band.high);
   const body = bandEnergy(sampleRate, 300, 1800);
-  const high = bandEnergy(sampleRate, 1800, 5000);
-  const total = bandEnergy(sampleRate, 120, 5000);
   const bandPeak = peakFrequency(sampleRate, band.low, band.high);
 
   smoothedSquillo = smooth(smoothedSquillo, squillo / Math.max(body, 0.000001), 0.18);
-  smoothedBrightness = smooth(smoothedBrightness, high / Math.max(total, 0.000001), 0.14);
 
   return {
     pitch,
     note,
     squilloRatio: smoothedSquillo,
-    brightness: smoothedBrightness,
+    squilloLevel: squilloLevel(smoothedSquillo),
     bandPeak,
   };
 }
@@ -325,8 +329,11 @@ function drawHarmonics(pitch: number, width: number, height: number): void {
 function renderMeters(analysis: Analysis): void {
   pitchValue.textContent = analysis.pitch ? `${Math.round(analysis.pitch)} Hz` : "--";
   noteValue.textContent = analysis.note;
-  squilloValue.textContent = `${analysis.squilloRatio.toFixed(2)}x`;
-  brightnessValue.textContent = `${Math.round(analysis.brightness * 100)}%`;
+  squilloValue.textContent = `${Math.round(analysis.squilloRatio * 100)}%`;
+  squilloStatus.textContent = formatSquilloLevel(analysis.squilloLevel);
+  squilloStatus.dataset.state = analysis.squilloLevel;
+  squilloMeter.style.transform = `scaleX(${clamp(analysis.squilloRatio / strongSquilloRatio, 0, 1)})`;
+  squilloMeter.dataset.state = analysis.squilloLevel;
 }
 
 function drawIdle(): void {
@@ -386,6 +393,30 @@ function heatColor(value: number, inBand: boolean): string {
 
 function smooth(previous: number, next: number, factor: number): number {
   return previous + (next - previous) * factor;
+}
+
+function squilloLevel(ratio: number): SquilloLevel {
+  if (ratio >= strongSquilloRatio) {
+    return "strong";
+  }
+
+  if (ratio >= buildingSquilloRatio) {
+    return "building";
+  }
+
+  return "low";
+}
+
+function formatSquilloLevel(level: SquilloLevel): string {
+  if (level === "strong") {
+    return "Strong";
+  }
+
+  if (level === "building") {
+    return "Building";
+  }
+
+  return "Low";
 }
 
 function clamp(value: number, low: number, high: number): number {
