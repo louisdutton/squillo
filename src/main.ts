@@ -24,8 +24,10 @@ const spectrogramCanvas = requireElement<HTMLCanvasElement>("#spectrogramCanvas"
 const spectrumCtx = getCanvasContext(spectrumCanvas);
 const spectrogramCtx = getCanvasContext(spectrogramCanvas);
 const fftSize = 8192;
-const minPitchHz = 70;
+const minPitchHz = 45;
 const maxPitchHz = 1100;
+const minPitchRms = 0.0025;
+const minPitchConfidence = 0.38;
 const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 let audioContext: AudioContext | null = null;
@@ -143,16 +145,33 @@ function estimatePitch(sampleRate: number): number | null {
   const minLag = Math.floor(sampleRate / maxPitchHz);
   const maxLag = Math.floor(sampleRate / minPitchHz);
   let bestLag = -1;
-  let bestCorrelation = 0;
+  let bestCorrelation = -Infinity;
+  let signalEnergy = 0;
+
+  for (const sample of timeData) {
+    signalEnergy += sample * sample;
+  }
+
+  const rms = Math.sqrt(signalEnergy / timeData.length);
+
+  if (rms < minPitchRms) {
+    return null;
+  }
 
   for (let lag = minLag; lag <= maxLag; lag += 1) {
     let correlation = 0;
+    let leftEnergy = 0;
+    let rightEnergy = 0;
 
     for (let index = 0; index < timeData.length - lag; index += 1) {
-      correlation += timeData[index] * timeData[index + lag];
+      const left = timeData[index];
+      const right = timeData[index + lag];
+      correlation += left * right;
+      leftEnergy += left * left;
+      rightEnergy += right * right;
     }
 
-    correlation /= timeData.length - lag;
+    correlation /= Math.sqrt(leftEnergy * rightEnergy) || 1;
 
     if (correlation > bestCorrelation) {
       bestCorrelation = correlation;
@@ -160,7 +179,7 @@ function estimatePitch(sampleRate: number): number | null {
     }
   }
 
-  if (bestLag < 0 || bestCorrelation < 0.01) {
+  if (bestLag < 0 || bestCorrelation < minPitchConfidence) {
     return null;
   }
 
