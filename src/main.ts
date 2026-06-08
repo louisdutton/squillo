@@ -17,7 +17,6 @@ const noteValue = requireElement<HTMLElement>("#noteValue");
 const squilloValue = requireElement<HTMLElement>("#squilloValue");
 const brightnessValue = requireElement<HTMLElement>("#brightnessValue");
 const gainControl = requireElement<HTMLInputElement>("#gainControl");
-const bandControl = requireElement<HTMLSelectElement>("#bandControl");
 const spectrumCanvas = requireElement<HTMLCanvasElement>("#spectrumCanvas");
 const spectrogramCanvas = requireElement<HTMLCanvasElement>("#spectrogramCanvas");
 
@@ -28,6 +27,7 @@ const minPitchHz = 45;
 const maxPitchHz = 1100;
 const minPitchRms = 0.0025;
 const minPitchConfidence = 0.38;
+const projectionBand: Band = { low: 2400, high: 3800 };
 const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 let audioContext: AudioContext | null = null;
@@ -111,11 +111,10 @@ function drawFrame(): void {
   analyser.getFloatFrequencyData(frequencyData);
   analyser.getFloatTimeDomainData(timeData);
 
-  const band = parseBand(bandControl.value);
-  const analysis = analyseVoice(audioContext.sampleRate, band);
+  const analysis = analyseVoice(audioContext.sampleRate, projectionBand);
   renderMeters(analysis);
-  drawSpectrum(audioContext.sampleRate, band, analysis);
-  drawSpectrogram(audioContext.sampleRate, band);
+  drawSpectrum(audioContext.sampleRate, projectionBand, analysis);
+  drawSpectrogram(audioContext.sampleRate, projectionBand);
 
   animationHandle = requestAnimationFrame(drawFrame);
 }
@@ -338,11 +337,6 @@ function drawIdle(): void {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawLabel(ctx, "Start mic to analyse live harmonics", 22, 34);
   }
-}
-
-function parseBand(value: string): Band {
-  const [low, high] = value.split(",").map(Number);
-  return { low, high };
 }
 
 function frequencyToNote(frequency: number): string {

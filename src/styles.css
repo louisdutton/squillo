@@ -18,8 +18,7 @@ body {
 }
 
 button,
-input,
-select {
+input {
   font: inherit;
 }
 
@@ -125,7 +124,7 @@ canvas {
 }
 
 .controls {
-  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr);
+  grid-template-columns: minmax(180px, 360px);
   margin-top: 12px;
 }
 
@@ -136,8 +135,7 @@ label {
   font-size: 0.9rem;
 }
 
-input,
-select {
+input {
   width: 100%;
   min-height: 38px;
   border: 1px solid #2b2d2f;
